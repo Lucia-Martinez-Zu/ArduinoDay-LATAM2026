@@ -1,0 +1,64 @@
+[
+  {"id":"mqtt_sensores","type":"mqtt in","name":"sensores/data",
+   "topic":"sensores/data","qos":"0","datatype":"json","broker":"broker1",
+   "x":80,"y":100,"wires":[["fn_extraer","fn_evaluar_if"]]},
+
+  {"id":"mqtt_cmd","type":"mqtt in","name":"control/cmd",
+   "topic":"control/cmd","qos":"0","datatype":"utf8","broker":"broker1",
+   "x":80,"y":300,"wires":[["fn_estado_ml"]]},
+
+  {"id":"broker1","type":"mqtt-broker","name":"Mosquitto local",
+   "broker":"localhost","port":"1883","clientid":"nodered_cps",
+   "keepalive":"60","cleansession":true},
+
+  {"id":"fn_extraer","type":"function","name":"Extraer campos",
+   "func":"return [\n  {payload: msg.payload.temp},\n  {payload: msg.payload.hum},\n  {payload: msg.payload.vib},\n  {payload: msg.payload.carga}\n];",
+   "outputs":4,"x":300,"y":100,
+   "wires":[["gauge_temp"],["gauge_hum"],["gauge_vib"],["gauge_carga"]]},
+
+  {"id":"fn_evaluar_if","type":"function","name":"IF vs ML",
+   "func":"const IF_TEMP=35,IF_VIB=750,IF_CARGA=640;\nlet d=msg.payload;\nlet ifR=(d.temp>IF_TEMP||d.vib>IF_VIB||d.carga>IF_CARGA)?'FALLA':'NORMAL';\nlet mlR=flow.get('ultimo_ml')||'---';\nlet diverge=(ifR!==mlR&&mlR!=='---');\nlet msgs=(flow.get('msgs')||0)+1;\nlet divs=(flow.get('divs')||0)+(diverge?1:0);\nflow.set('msgs',msgs);flow.set('divs',divs);\nlet pct=((divs/msgs)*100).toFixed(1);\nreturn [{payload:ifR},{payload:mlR},{payload:'Mensajes: '+msgs+' | Divergencias: '+divs+' ('+pct+'%)'}];",
+   "outputs":3,"x":300,"y":200,
+   "wires":[["txt_if"],["txt_ml"],["txt_stats"]]},
+
+  {"id":"fn_estado_ml","type":"function","name":"Guardar ML",
+   "func":"flow.set('ultimo_ml', msg.payload.trim()); return msg;",
+   "outputs":1,"x":300,"y":300,"wires":[[]]},
+
+  {"id":"gauge_temp","type":"ui_gauge","name":"Temperatura",
+   "group":"grp_sensores","label":"Temperatura","units":"°C",
+   "min":"0","max":"60","x":520,"y":60,
+   "colors":["#02C39A","#E5AD24","#E63946"],"wires":[]},
+
+  {"id":"gauge_hum","type":"ui_gauge","name":"Humedad",
+   "group":"grp_sensores","label":"Humedad","units":"%",
+   "min":"0","max":"100","x":520,"y":110,
+   "colors":["#02C39A","#E5AD24","#E63946"],"wires":[]},
+
+  {"id":"gauge_vib","type":"ui_gauge","name":"Vibración",
+   "group":"grp_sensores","label":"Vibración","units":"ADC",
+   "min":"0","max":"1023","x":520,"y":160,
+   "colors":["#02C39A","#E5AD24","#E63946"],"wires":[]},
+
+  {"id":"gauge_carga","type":"ui_gauge","name":"Carga",
+   "group":"grp_sensores","label":"Carga","units":"ADC",
+   "min":"0","max":"1023","x":520,"y":210,
+   "colors":["#02C39A","#E5AD24","#E63946"],"wires":[]},
+
+  {"id":"txt_if","type":"ui_text","name":"IF","group":"grp_ifml",
+   "label":"Sistema IF","format":"{{msg.payload}}","x":520,"y":260,"wires":[]},
+
+  {"id":"txt_ml","type":"ui_text","name":"ML","group":"grp_ifml",
+   "label":"Sistema ML","format":"{{msg.payload}}","x":520,"y":310,"wires":[]},
+
+  {"id":"txt_stats","type":"ui_text","name":"Stats","group":"grp_ifml",
+   "label":"Sesión","format":"{{msg.payload}}","x":520,"y":360,"wires":[]},
+
+  {"id":"grp_sensores","type":"ui_group","name":"Sensores en tiempo real",
+   "tab":"tab_cps","order":1,"disp":true,"width":"6"},
+
+  {"id":"grp_ifml","type":"ui_group","name":"IF vs ML",
+   "tab":"tab_cps","order":2,"disp":true,"width":"6"},
+
+  {"id":"tab_cps","type":"ui_tab","name":"CPS Inteligente","icon":"dashboard"}
+]
