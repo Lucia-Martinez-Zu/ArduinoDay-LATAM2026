@@ -15,6 +15,8 @@ cps_project/
 └── python/
     ├── train_model.py        → Genera dataset y entrena Random Forest
     └── dashboard.py          → Dashboard MQTT + IF vs ML en tiempo real
+└── node-red/
+    └── dashboard.json        → Dashboard MQTT + IF vs ML en Node Red
 ```
 
 ---
@@ -161,7 +163,7 @@ El sistema estará operativo cuando el LED del Arduino parpadee verde.
 | Falso positivo ⚡  | Soplar DHT11 brevemente (pico de temp.)    | FALLA    | NORMAL   |
 
 Los escenarios marcados con ⚡ son los momentos pedagógicos clave:
-el ML y el IF divergen, y el ML tiene razón.
+El ML y el IF divergen, y el ML tiene razón.
 
 ---
 
