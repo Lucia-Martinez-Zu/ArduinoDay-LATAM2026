@@ -58,6 +58,35 @@ Para encontrar la IP de tu PC:
 
 ---
 
+### Pines de comunicación Serial con Arduino
+
+Por defecto el firmware usa **GPIO16 (RX2)** y **GPIO17 (TX2)**:
+
+```cpp
+#define ARD_RX_PIN   16
+#define ARD_TX_PIN   17
+```
+
+> ⚠️ **Nota importante:** Algunos modelos ESP32-WROVER tienen PSRAM integrada
+> que ocupa internamente GPIO16 y GPIO17. Si al conectar el pin TX del Arduino
+> hacia el ESP32 se interrumpe toda comunicación, o si midiendo GPIO17 a tierra
+> (sin nada conectado) el voltaje es inferior a 3.3V, es señal de que tu módulo
+> usa esos pines internamente.
+>
+> En ese caso, cambia los pines en `esp32_gateway.ino` a:
+>
+> ```cpp
+> #define ARD_RX_PIN   25
+> #define ARD_TX_PIN   26
+> ```
+>
+> Y actualiza el cableado:
+> - Arduino D6 (TX) → GPIO25 (RX nuevo del ESP32)
+> - Arduino D7 (RX) ← GPIO26 (TX nuevo del ESP32)
+>
+> Si no presentas ningún error con los pines originales, puedes continuar
+> trabajando con GPIO16 y GPIO17 sin ningún cambio.
+
 ## Paso 2 — Instalar bibliotecas en Arduino IDE
 
 Para **Arduino UNO**:
